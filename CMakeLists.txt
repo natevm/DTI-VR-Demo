@@ -8,6 +8,10 @@ include(${PROJECT_SOURCE_DIR}/CMakeGenerateHierarchy.txt)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMake)
 
+# ┌──────────────────────────────────────────────────────────────────┐
+# │  Load libraries                                                  │
+# └──────────────────────────────────────────────────────────────────┘
+
 # glfw
 set(GLFW_BUILD_EXAMPLES OFF CACHE STRING "" FORCE)
 set(GLFW_BUILD_TESTS    OFF CACHE STRING "" FORCE)
@@ -25,20 +29,21 @@ find_package(GLEW REQUIRED)
 # glm
 find_package(GLM REQUIRED)
 
+# gldk 
+add_subdirectory(lib/gldk)
+
 # openvr
-add_subdirectory(lib/openvr)
 find_package(OpenVR REQUIRED)
 
 set(INCLUDES 
 	lib/openvr/headers)
 
-# add libraries to a list for linking
 set(LIBRARIES
-    ${OPENCL_LIBRARY}
     ${OPENGL_LIBRARIES}
-    #${GLFW_LIBRARIES}
-    #${GLEW_LIBRARY}
-    ${OPENVR_LIBRARY})
+    ${OPENVR_LIBRARY}
+    libglew_static
+    glfw
+    GLDK)
 
 # ┌──────────────────────────────────────────────────────────────────┐
 # │  Build executable                                                │

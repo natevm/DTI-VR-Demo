@@ -1,0 +1,5 @@
+set(TexCoord_SRC
+	${CMAKE_CURRENT_SOURCE_DIR}/TexCoord.hpp
+	${CMAKE_CURRENT_SOURCE_DIR}/TexCoord.cpp
+	PARENT_SCOPE
+	)

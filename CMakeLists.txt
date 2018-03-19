@@ -8,6 +8,20 @@ include(${PROJECT_SOURCE_DIR}/CMakeGenerateHierarchy.txt)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMake)
 
+# Use c++17
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+if(MSVC)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
+endif(MSVC)
+
+# ┌──────────────────────────────────────────────────────────────────┐
+# │  Definitions                                                     │
+# └──────────────────────────────────────────────────────────────────┘
+
+add_definitions(-DResourcePath="${CMAKE_CURRENT_SOURCE_DIR}/resources/")
+
 # ┌──────────────────────────────────────────────────────────────────┐
 # │  Load libraries                                                  │
 # └──────────────────────────────────────────────────────────────────┘
@@ -28,29 +42,49 @@ find_package(GLEW REQUIRED)
 
 # glm
 find_package(GLM REQUIRED)
+include_directories(SYSTEM lib/glm)
+
+# gli
+find_package(GLI REQUIRED)
+include_directories(SYSTEM lib/gli)
+
+# teem 
+find_package(Teem REQUIRED)
+include_directories(SYSTEM ${TEEM_INCLUDE_DIR})
 
 # gldk 
 add_subdirectory(lib/gldk)
 
 # openvr
 find_package(OpenVR REQUIRED)
+include_directories(SYSTEM ${OPENVR_INCLUDE_DIR})
 
-set(INCLUDES 
-	lib/openvr/headers)
+#ecs
+add_subdirectory(lib/ecs)
+
+message(WARN ${TEEM_LIBRARY})
 
 set(LIBRARIES
+	${TEEM_LIBRARY}
     ${OPENGL_LIBRARIES}
     ${OPENVR_LIBRARY}
     libglew_static
     glfw
-    GLDK)
+    GLDK
+    ECS)
+
+# ┌──────────────────────────────────────────────────────────────────┐
+# │  Add source files                                                │
+# └──────────────────────────────────────────────────────────────────┘
+add_subdirectory(sources)
 
 # ┌──────────────────────────────────────────────────────────────────┐
 # │  Build executable                                                │
 # └──────────────────────────────────────────────────────────────────┘
-add_executable (Desktop "./sources/main.cpp")
-target_link_libraries (Desktop ${LIBRARIES})
-target_include_directories(Desktop PUBLIC ${INCLUDES})
+add_executable (DTI_Demo_Desktop "${DTI_DEMO_DESKTOP_SRC}")
+target_link_libraries (DTI_Demo_Desktop ${LIBRARIES})
+generate_folder_hierarchy("${DTI_DEMO_DESKTOP_SRC}")
 
-generate_folder_hierarchy(".")
-
+add_executable (DTI_Demo_VR "${DTI_DEMO_VR_SRC}")
+target_link_libraries (DTI_Demo_VR ${LIBRARIES})
+generate_folder_hierarchy("${DTI_DEMO_VR_SRC}")

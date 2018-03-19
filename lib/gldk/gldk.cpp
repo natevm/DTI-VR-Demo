@@ -14,8 +14,8 @@ int GLDK::MajorVersion = 4;
 int GLDK::MinorVersion = 5;
 bool GLDK::FullScreenActive = false;
 bool GLDK::WindowHidden = false;
-int GLDK::DefaultWindowSize[2] = { 512 , 512 };
-int GLDK::DefaultWindowPos[2];
+int GLDK::CurrentWindowSize[2] = { 512 , 512 };
+int GLDK::CurrentWindowPos[2];
 int GLDK::PreviousWindowSize[2] = { 512 , 512 };
 int GLDK::PreviousWindowPos[2];
 std::string GLDK::DefaultWindowTitle = "";
@@ -49,10 +49,63 @@ void GLDK::ErrorCallback(int _error, const char* description)
 	print("Error: " + std::string(description));
 }
 
+void APIENTRY openglCallbackFunction(GLenum source,
+	GLenum type,
+	GLuint id,
+	GLenum severity,
+	GLsizei length,
+	const GLchar* message,
+	const void* userParam) {
+	/* Kinda kludgy, but nvidia reports many "other" things that tend to spam console.*/
+	if (type == GL_DEBUG_TYPE_OTHER) return;
+
+	using namespace std;
+	cout << "---------------------opengl-callback-start------------" << endl;
+	cout << "message: " << message << endl;
+	cout << "type: ";
+	switch (type) {
+	case GL_DEBUG_TYPE_ERROR:
+		cout << "ERROR";
+		break;
+	case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+		cout << "DEPRECATED_BEHAVIOR";
+		break;
+	case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+		cout << "UNDEFINED_BEHAVIOR";
+		break;
+	case GL_DEBUG_TYPE_PORTABILITY:
+		cout << "PORTABILITY";
+		break;
+	case GL_DEBUG_TYPE_PERFORMANCE:
+		cout << "PERFORMANCE";
+		break;
+	case GL_DEBUG_TYPE_OTHER:
+		cout << "OTHER";
+		break;
+	}
+	cout << endl;
+
+	cout << "id: " << id << endl;
+	cout << "severity: ";
+	switch (severity) {
+	case GL_DEBUG_SEVERITY_LOW:
+		cout << "LOW";
+		break;
+	case GL_DEBUG_SEVERITY_MEDIUM:
+		cout << "MEDIUM";
+		break;
+	case GL_DEBUG_SEVERITY_HIGH:
+		cout << "HIGH";
+		break;
+	}
+	cout << endl;
+	cout << "---------------------opengl-callback-end--------------" << endl;
+}
+
 /* Initializers */
 bool GLDK::Initialize(InitializationParameters parameters) {
-	DefaultWindowSize[0] = parameters.windowWidth;
-	DefaultWindowSize[1] = parameters.windowHeight;
+	CurrentWindowSize[0] = parameters.windowWidth;
+	CurrentWindowSize[1] = parameters.windowHeight;
 	DefaultWindowTitle = parameters.windowTitle;
 	FullScreenActive = parameters.fullScreenActive;
 	WindowHidden = parameters.windowHidden;
@@ -70,19 +123,35 @@ bool GLDK::Initialize(InitializationParameters parameters) {
 	monitor = NULL;
 
 	DefaultMonitor = glfwGetPrimaryMonitor();
-	CreateNewWindow(DefaultWindowSize[0], DefaultWindowSize[1], DefaultWindowTitle, NULL, NULL);
+	CreateNewWindow(CurrentWindowSize[0], CurrentWindowSize[1], DefaultWindowTitle, NULL, NULL);
 	MakeContextCurrent(DefaultWindow);
-	if (LoadFunctionPointers() != true) {
+	if (LoadFunctionPointers() != 1) {
 		return false;
 	};
-	SetFullScreen(FullScreenActive, DefaultWindowPos, DefaultWindowSize);
+	SetFullScreen(FullScreenActive, CurrentWindowPos, CurrentWindowSize);
 	SetWindowHidden(WindowHidden);
 
-	/* Get a list of all OpenGL Shaders to build*/
-	getSources(DefaultSources);
-	if (DefaultSources.size() == 0) return error;
+	/* Changing this, now material components load/compile their own shaders */
+	///* Get a list of all OpenGL Shaders to build*/
+	//getSources(DefaultSources);
+	//if (DefaultSources.size() == 0) return error;
 
-	buildShaders(Shaders, DefaultSources, BuildOptions);
+	//buildShaders(Shaders, DefaultSources, BuildOptions);
+
+	
+#if _DEBUG
+	if (glDebugMessageCallback) {
+		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+		glDebugMessageCallback(openglCallbackFunction, nullptr);
+		GLuint unusedIds = 0;
+		glDebugMessageControl(GL_DONT_CARE,
+			GL_DONT_CARE,
+			GL_DONT_CARE,
+			0,
+			&unusedIds,
+			true);
+	}
+#endif
 
 	return true;
 }
@@ -240,8 +309,13 @@ void GLDK::Terminate() {
 }
 
 int GLDK::CreateNewWindow(int width, int height, std::string title, GLFWmonitor *monitor, GLFWwindow *share) {
+	
+
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, MajorVersion);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, MinorVersion);
+#if _DEBUG
+//	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+#endif
 	DefaultWindow = glfwCreateWindow(width, height, title.c_str(), monitor, share);
 	if (!DefaultWindow) {
 		return -1;
@@ -280,21 +354,21 @@ void GLDK::SetFullScreen(bool fullscreen, int windowPos[2], int windowSize[2]) {
 		// get reolution of monitor
 		const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 		
-		DefaultWindowSize[0] = mode->width;
-		DefaultWindowSize[1] = mode->height;
+		CurrentWindowSize[0] = mode->width;
+		CurrentWindowSize[1] = mode->height;
 
 		// switch to full screen
 		glfwSetWindowMonitor(DefaultWindow, DefaultMonitor, 0, 0, mode->width, mode->height, 0);
 	}
 	else
 	{
-		DefaultWindowSize[0] = windowSize[0];
-		DefaultWindowSize[1] = windowSize[1];
+		CurrentWindowSize[0] = windowSize[0];
+		CurrentWindowSize[1] = windowSize[1];
 
 		// restore last window size and position
 		glfwSetWindowMonitor(DefaultWindow, nullptr, windowPos[0], windowPos[1], windowSize[0], windowSize[1], 0);
 	}
-	glViewport(0, 0, DefaultWindowSize[0], DefaultWindowSize[1]);
+	glViewport(0, 0, CurrentWindowSize[0], CurrentWindowSize[1]);
 
 /*
 	_updateViewport = true;*/

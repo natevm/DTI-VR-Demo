@@ -6,7 +6,10 @@
 
 #define OPENGL_SOURCES_PATH "./opengl_sources.txt"
 
+#ifndef GLEW_STATIC
 #define GLEW_STATIC
+#endif // !GLEW_STATIC
+
 
 #ifndef GLM_ENABLE_EXPERIMENTAL
 #define GLM_ENABLE_EXPERIMENTAL
@@ -14,8 +17,11 @@
 
 #ifndef GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_DEPTH_ZERO_TO_ONE
 #endif
+
+//#ifndef GLM_DEPTH_ZERO_TO_ONE
+//#define GLM_DEPTH_ZERO_TO_ONE
+//#endif
 
 #include <GL/glew.h>
 #ifdef __MAC__
@@ -57,8 +63,8 @@ public:
 	static int MinorVersion;
 	static bool FullScreenActive;
 	static bool WindowHidden;
-	static int DefaultWindowSize[2];
-	static int DefaultWindowPos[2];
+	static int CurrentWindowSize[2];
+	static int CurrentWindowPos[2];
 	static int PreviousWindowSize[2];
 	static int PreviousWindowPos[2];
 	static std::string DefaultWindowTitle;

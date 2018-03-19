@@ -1,0 +1,5 @@
+set(Texture_SRC
+	${CMAKE_CURRENT_SOURCE_DIR}/Texture.hpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Texture.cpp
+	PARENT_SCOPE
+	)

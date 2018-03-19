@@ -1,0 +1,3 @@
+set (Model_SRC
+	${CMAKE_CURRENT_SOURCE_DIR}/Model.hpp
+	PARENT_SCOPE) 

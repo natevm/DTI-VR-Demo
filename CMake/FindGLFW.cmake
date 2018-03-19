@@ -37,7 +37,7 @@ find_path( GLFW_INCLUDE_DIR
         "${GLFW_LOCATION}/include"
         "lib/glfw/include"
     PATHS
-        "$ENV{PROGRAMFILES}/GLFW/include"
+        "lib/glfw/include"
         "${OPENGL_INCLUDE_DIR}"
         /usr/openwin/share/include
         /usr/openwin/include
@@ -62,7 +62,7 @@ find_path( GLFW_INCLUDE_DIR
         "${GLFW_LOCATION}/include"
         "lib/glfw/include"
     PATHS
-        "$ENV{PROGRAMFILES}/GLFW/include"
+        "lib/glfw/include"
         "${OPENGL_INCLUDE_DIR}"
         /usr/openwin/share/include
         /usr/openwin/include
@@ -112,7 +112,7 @@ if (WIN32)
                 "lib/glfw/lib-msvc110"
                 "lib/glfw/lib-vc2012"
             PATHS
-                "$ENV{PROGRAMFILES}/GLFW/lib"
+                "lib/glfw/lib"
                 "${OPENGL_LIBRARY_DIR}"
             DOC 
                 "The GLFW library"

@@ -1,0 +1,5 @@
+set(Normal_SRC
+	${CMAKE_CURRENT_SOURCE_DIR}/Normal.hpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Normal.cpp
+	PARENT_SCOPE
+	)

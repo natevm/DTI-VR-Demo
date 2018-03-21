@@ -4,6 +4,7 @@
 #include "Entities/Entity.hpp"
 #include <glm/glm.hpp>
 #include <array>
+#include <glm/gtx/component_wise.hpp>
 
 namespace Components::Meshes {
 	class ViewAlignedSlices : public Mesh {
@@ -58,23 +59,81 @@ namespace Components::Meshes {
 			return glm::vec3(0);
 		}
 
-		bool needsUpdate = true;
+		int lastAxisUpdated = -1;
 		void update_axis_aligned(Components::Math::Transform &transform, std::shared_ptr<Entities::Entity> camera) {
-		//	if (!needsUpdate) return;
-			needsUpdate = false;
+			using namespace glm;
+			vec3 camfrwd = glm::normalize(glm::vec3(transform.ParentToLocalMatrix() * vec4(camera->transform.forward.load(), 0.0)));
+
+			glm::vec3 toVolume = camfrwd;// glm::normalize(transform.GetPosition() - pos);
+			float absX = glm::abs(toVolume.x);
+			float absY = glm::abs(toVolume.y);
+			float absZ = glm::abs(toVolume.z);
+
+			glm::vec3 start;
+			glm::vec3 end;
+			glm::vec3 frwd;
+			glm::vec3 right;
+			glm::vec3 up;
+
+			if (absX > absY && absX > absZ) {
+				if (toVolume.x > 0.0) {
+					start = vec3(-1.0, 0.0, 0.0);
+					end = vec3(1.0, 0.0, 0.0);
+					if (lastAxisUpdated == 0) return;
+					lastAxisUpdated = 0;
+				}
+				else {
+					start = vec3(1.0, 0.0, 0.0);
+					end = vec3(-1.0, 0.0, 0.0);
+					if (lastAxisUpdated == 1) return;
+					lastAxisUpdated = 1;
+				}
+				right = vec3(0.0, 1.0, 0.0);
+				up = vec3(0.0, 0.0, 1.0);
+			}
+			
+			else if (absY > absX && absY > absZ) {
+				if (toVolume.y > 0.0) {
+					start = vec3(0.0, -1.0, 0.0);
+					end = vec3(0.0, 1.0, 0.0);
+					if (lastAxisUpdated == 2) return;
+					lastAxisUpdated = 2;
+				}
+				else {
+					start = vec3(0.0, 1.0, 0.0);
+					end = vec3(0.0, -1.0, 0.0);
+					if (lastAxisUpdated == 3) return;
+					lastAxisUpdated = 3;
+				}
+				right = vec3(1.0, 0.0, 0.0);
+				up = vec3(0.0, 0.0, 1.0);
+			}
+
+			else if (absZ > absX && absZ > absY) {
+				if (toVolume.z > 0.0) {
+					start = vec3(0.0, 0.0, -1.0);
+					end = vec3(0.0, 0.0, 1.0);
+					if (lastAxisUpdated == 4) return;
+					lastAxisUpdated = 4;
+				}
+				else {
+					start = vec3(0.0, 0.0, 1.0);
+					end = vec3(0.0, 0.0, -1.0);
+					if (lastAxisUpdated == 5) return;
+					lastAxisUpdated = 5;
+				}
+				right = vec3(1.0, 0.0, 0.0);
+				up = vec3(0.0, 1.0, 0.0);
+			}
+			
+			frwd = normalize(start - end);
 
 			points.clear();
 			uvs.clear();
 			colors.clear();
 			normals.clear();
 			indices.clear();
-
-			glm::vec3 start = glm::vec3(-1.0, 0.0, 0.0);
-			glm::vec3 end = glm::vec3(1.0, 0.0, 0.0);
-			glm::vec3 frwd = glm::vec3(1.0, 0.0, 0.0);
-			glm::vec3 right = glm::vec3(0.0, 1.0, 0.0);
-			glm::vec3 up = glm::vec3(0.0, 0.0, 1.0);
-
+			
 			float dAlpha = 1.0f / numSlices;
 			for (int i = 0; i < numSlices; ++i) {
 				float alpha = i * dAlpha;

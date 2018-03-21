@@ -70,7 +70,7 @@ void SetupComponents() {
 	TextureList["Controller"] = std::make_shared<Components::Textures::Texture2D>(ResourcePath "Vive/Controller/onepointfive_texture.ktx");
 
 	/* View aligned slices for volume and image */
-	MeshList["ViewAlignedSlices"] = std::make_shared<Components::Meshes::ViewAlignedSlices>(512);
+	MeshList["ViewAlignedSlices"] = std::make_shared<Components::Meshes::ViewAlignedSlices>(256);
 	TextureList["Volume"] = std::make_shared<Components::Textures::Texture3D>(ResourcePath "dwi_fa_clean.nrrd");
 
 	/* Load Streamlines */
@@ -137,7 +137,7 @@ void SetupEntites() {
 			viewAlignedSlices->update_axis_aligned(self->transform, camera);
 		}
 	};
-	//mainScene->addObject(volume);
+	mainScene->addObject(volume);
 }
 
 void Cleanup() {

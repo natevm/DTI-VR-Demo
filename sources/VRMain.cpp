@@ -68,7 +68,7 @@ void SetupComponents() {
 	System::SharedData::TextureList["Controller"] = std::make_shared<Components::Textures::Texture2D>(ResourcePath "Vive/Controller/onepointfive_texture.ktx");
 	
 	/* View aligned slices for volume and image */
-	MeshList["ViewAlignedSlices"] = std::make_shared<Components::Meshes::ViewAlignedSlices>(64);
+	MeshList["ViewAlignedSlices"] = std::make_shared<Components::Meshes::ViewAlignedSlices>(128);
 	TextureList["Volume"] = std::make_shared<Components::Textures::Texture3D>(ResourcePath "dwi_fa_clean.nrrd");
 	//TextureList["Volume"] = std::make_shared<Components::Textures::Texture3D>(ResourcePath "patient1_mri_original/patient1_T2_original.nhdr");
 
@@ -145,7 +145,7 @@ void SetupEntites() {
 	streamline->setMesh(System::SharedData::MeshList["tractography"]);
 	tracktography->addObject(streamline);
 	mainScene->addObject(tracktography);
-	//mainScene->addObject(volume);
+	mainScene->addObject(volume);
 }
 
 void Cleanup() {

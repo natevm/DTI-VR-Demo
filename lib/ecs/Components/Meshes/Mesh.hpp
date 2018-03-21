@@ -26,7 +26,7 @@ namespace Components::Meshes {
 		};
 
 		virtual void cleanup() = 0;
-		virtual int getIndexBytes() { return 1; }
+		virtual int getIndexBytes() = 0;
 		virtual GLuint getVertexBuffer() = 0;
 		virtual GLuint getColorBuffer() { return 0; };
 		virtual GLuint getIndexBuffer() = 0;

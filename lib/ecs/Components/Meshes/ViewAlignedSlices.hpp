@@ -31,6 +31,10 @@ namespace Components::Meshes {
 			glDeleteBuffers(1, &texCoordBuffer);
 		}
 
+		int getIndexBytes() {
+			return sizeof(uint16_t);
+		}
+		
 		GLuint getVertexBuffer() {
 			return vertexBuffer;
 		}

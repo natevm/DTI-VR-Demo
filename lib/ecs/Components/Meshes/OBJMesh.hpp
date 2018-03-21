@@ -42,16 +42,20 @@ namespace Components::Meshes {
 		/* Loads a mesh from an obj file */
 		void loadFromOBJ(std::string objPath);
 		
+		int getIndexBytes() {
+			return sizeof(uint16_t);
+		}
+
+		GLuint getIndexBuffer() {
+			return indexBuffer;
+		}
+
 		GLuint getVertexBuffer() {
 			return vertexBuffer;
 		}
 
 		GLuint getColorBuffer() {
 			return colorBuffer;
-		}
-
-		GLuint getIndexBuffer() {
-			return indexBuffer;
 		}
 
 		GLuint getNormalBuffer() {
@@ -83,7 +87,7 @@ namespace Components::Meshes {
 		std::vector<glm::vec3> normals;
 		std::vector<glm::vec4> colors;
 		std::vector<glm::vec2> texcoords;
-		std::vector<unsigned short> indices;
+		std::vector<uint16_t> indices;
 
 	private:
 		glm::vec3 centroid = glm::vec3(0.0);

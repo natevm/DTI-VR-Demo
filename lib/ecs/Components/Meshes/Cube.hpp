@@ -97,7 +97,7 @@ namespace Components::Meshes {
 			0.666866004f, 0.000199999995f, 0.000199999995f, 0.000199999995f,
 			0.666866004f, 0.333133012f, 0.333532989f, 0.000199999995f,
 		};
-		std::array<unsigned short, 36> indices = {
+		std::array<uint16_t, 36> indices = {
 			0, 3, 6, 0, 6, 9, 12, 21, 18, 12, 18, 15, 1, 13,
 			16, 1, 16, 4, 5, 17, 19, 5, 19, 7, 8, 20, 22, 8, 22,
 			10, 14, 2, 11, 14, 11, 23,
@@ -110,25 +110,25 @@ namespace Components::Meshes {
 
 		void createVertexBuffer() {
 			size_t bufferSize = verts.size() * sizeof(float);
-			glGenBuffers(1, &vertexBuffer);
+			glCreateBuffers(1, &vertexBuffer);
 			glNamedBufferData(vertexBuffer, bufferSize, verts.data(), GL_STATIC_DRAW);
 		}
 
 		void createIndexBuffer() {
 			size_t bufferSize = indices.size() * sizeof(unsigned short);
-			glGenBuffers(1, &indexBuffer);
+			glCreateBuffers(1, &indexBuffer);
 			glNamedBufferData(indexBuffer, bufferSize, indices.data(), GL_STATIC_DRAW);
 		}
 
 		void createNormalBuffer() {
 			size_t bufferSize = normals.size() * sizeof(float);
-			glGenBuffers(1, &normalBuffer);
+			glCreateBuffers(1, &normalBuffer);
 			glNamedBufferData(normalBuffer, bufferSize, normals.data(), GL_STATIC_DRAW);
 		}
 
 		void createTexCoordBuffer() {
 			size_t bufferSize = uvs.size() * sizeof(float);
-			glGenBuffers(1, &texCoordBuffer);
+			glCreateBuffers(1, &texCoordBuffer);
 			glNamedBufferData(texCoordBuffer, bufferSize, uvs.data(), GL_STATIC_DRAW);
 		}
 	};

@@ -67,10 +67,20 @@ void SetupComponents() {
 	System::SharedData::MeshList["Controller"] = std::make_shared<Components::Meshes::OBJMesh>(ResourcePath "Vive/Controller/vr_controller_vive_1_5.obj");
 	System::SharedData::TextureList["Controller"] = std::make_shared<Components::Textures::Texture2D>(ResourcePath "Vive/Controller/onepointfive_texture.ktx");
 	
+	/* Instruction texture */
+	System::SharedData::TextureList["Instructions"] = std::make_shared<Components::Textures::Texture2D>(ResourcePath "Instructions.ktx");
+
+	/* Floor texture */
+	System::SharedData::TextureList["Floor"] = std::make_shared<Components::Textures::Texture2D>(ResourcePath "Floor.ktx");
+
 	/* View aligned slices for volume and image */
 	MeshList["ViewAlignedSlices"] = std::make_shared<Components::Meshes::ViewAlignedSlices>(128);
 	TextureList["Volume"] = std::make_shared<Components::Textures::Texture3D>(ResourcePath "dwi_fa_clean.nrrd");
 	//TextureList["Volume"] = std::make_shared<Components::Textures::Texture3D>(ResourcePath "patient1_mri_original/patient1_T2_original.nhdr");
+
+	/* Plane for floor and instructions */
+	MeshList["plane"] = std::make_shared<Components::Meshes::Plane>();
+
 
 	/* Load Streamlines */
 	std::vector<std::string> paths;
@@ -91,34 +101,115 @@ void SetupComponents() {
 
 }
 
+glm::vec3 oldRightPos, newRightPos;
+glm::vec3 oldLeftPos, newLeftPos;
+glm::vec3 oldCenterPos, newCenterPos;
+float oldDistance, newDistance;
+
+void viveCallback(std::shared_ptr<Entities::Entity> entity) {
+	Components::Materials::PipelineKey surfaceKey = { 0, 1 };
+
+	auto vive = std::dynamic_pointer_cast<Entities::Cameras::HTCVive>(entity);
+	
+	bool rightGripPressed = bool(vive->rightControllerState.ulButtonPressed >> 2 & 1);
+	bool leftGripPressed = bool(vive->leftControllerState.ulButtonPressed >> 2 & 1);
+
+	auto viveContainer = System::SharedData::Scenes["MainScene"]->children["ViveContainer"];
+		
+	/* Change controller colors */
+	if (leftGripPressed) {
+		vive->leftController->materials["Texture"]->active = false;
+		vive->leftController->materials["Color"]->active = true;
+	}
+	else {
+		vive->leftController->materials["Texture"]->active = true;
+		vive->leftController->materials["Color"]->active = false;
+	}
+	if (rightGripPressed) {
+		vive->rightController->materials["Texture"]->active = false;
+		vive->rightController->materials["Color"]->active = true;
+	}
+	else {
+		vive->rightController->materials["Texture"]->active = true;
+		vive->rightController->materials["Color"]->active = false;
+	}
+
+
+	newRightPos = vive->rightController->transform.GetPosition();
+	newLeftPos = vive->leftController->transform.GetPosition();
+	newCenterPos = (newRightPos + newLeftPos) * .5f;
+	newDistance = glm::distance(newRightPos, newLeftPos);
+
+	if (rightGripPressed && !leftGripPressed) {
+		viveContainer->transform.AddPosition(-(newRightPos - oldRightPos));
+	}
+	else if (!rightGripPressed && leftGripPressed) {
+		viveContainer->transform.AddPosition(-(newLeftPos - oldLeftPos));
+	}
+	else if (rightGripPressed && leftGripPressed) {
+		viveContainer->transform.AddPosition(-(newCenterPos - oldCenterPos));
+		//viveContainer->transform.AddScale(-(newDistance - oldDistance), -(newDistance - oldDistance), -(newDistance - oldDistance));
+	}
+
+	oldRightPos = newRightPos;
+	oldLeftPos = newLeftPos;
+	oldCenterPos = newCenterPos;
+	oldDistance = newDistance;
+}
+
 void SetupEntites() {
 	auto mainScene = System::SharedData::Scenes["MainScene"];
 	Components::Materials::PipelineKey wireframeKey = { 0, 0 };
 	Components::Materials::PipelineKey surfaceKey = { 0, 1 };
 
+	/* Floor */
+	auto floor = std::make_shared<Entities::Model>("Floor");
+	floor->setMesh(System::SharedData::MeshList["plane"]);
+	auto floorMaterial = std::make_shared<Components::Materials::SurfaceMaterials::Texture>("Texture", surfaceKey, System::SharedData::TextureList["Floor"]);
+	floor->addMaterial(floorMaterial);
+	floor->transform.SetScale(1.5, 1.5, 1.5);
+	floor->transform.SetRotation(3.14 / 2.0, glm::vec3(1.0, 0.0, 0.0));
+
 	/* Camera */
 	auto viveContainer = std::make_shared<Entities::Entity>("ViveContainer");
-	viveContainer->transform.SetPosition(glm::vec3(0.0, -1.5f, 0.0));
+	viveContainer->transform.SetPosition(glm::vec3(0.0, -1.75f, 0.0));
 	viveContainer->transform.SetScale(glm::vec3(1.5));
 
 	auto vive = std::make_shared<Entities::Cameras::HTCVive>("Vive", viveContainer);
-	auto rightMaterial = std::make_shared<Components::Materials::SurfaceMaterials::Texture>(surfaceKey, System::SharedData::TextureList["Controller"]);
-	auto leftMaterial = std::make_shared<Components::Materials::SurfaceMaterials::Texture>(surfaceKey, System::SharedData::TextureList["Controller"]);
+	auto rightTextureMaterial = std::make_shared<Components::Materials::SurfaceMaterials::Texture>("Texture", surfaceKey, System::SharedData::TextureList["Controller"]);
+	auto leftTextureMaterial = std::make_shared<Components::Materials::SurfaceMaterials::Texture>("Texture", surfaceKey, System::SharedData::TextureList["Controller"]);
+	auto rightRedMaterial = std::make_shared<Components::Materials::SurfaceMaterials::UniformColor>("Color", surfaceKey, glm::vec4(0.0, 1.0, 0.0, 1.0));
+	auto leftRedMaterial = std::make_shared<Components::Materials::SurfaceMaterials::UniformColor>("Color", surfaceKey, glm::vec4(0.0, 1.0, 0.0, 1.0));
 	vive->rightController->setMesh(System::SharedData::MeshList["Controller"]);
 	vive->leftController->setMesh(System::SharedData::MeshList["Controller"]);
-	vive->rightController->addMaterial(rightMaterial);
-	vive->leftController->addMaterial(leftMaterial);
-	viveContainer->addObject(vive);
+	vive->rightController->addMaterial(rightTextureMaterial);
+	vive->rightController->addMaterial(rightRedMaterial);
+	vive->leftController->addMaterial(leftTextureMaterial);
+	vive->leftController->addMaterial(leftRedMaterial);
 
+	vive->updateCallback = viveCallback;
+
+	viveContainer->addObject(vive);
+	viveContainer->addObject(floor);
 	mainScene->addObject(viveContainer);
+
+	/* Instruction panel */
+	auto instructionPanel = std::make_shared<Entities::Model>("instructionPanel");
+	auto instructionPanelMaterial = std::make_shared<Components::Materials::SurfaceMaterials::Texture>("Texture", surfaceKey, System::SharedData::TextureList["Instructions"]);
+	instructionPanel->addMaterial(instructionPanelMaterial);
+	instructionPanel->setMesh(System::SharedData::MeshList["plane"]);
+	instructionPanel->transform.SetScale(glm::vec3(.5f, 1.f, 0.1f)* .75f);
+	instructionPanel->transform.SetPosition(1.5, 1.0, 0.0);
+	instructionPanel->transform.SetRotation(3.14 * -3.0/4.0, glm::vec3(0.0, 1.0, 0.0));
+	viveContainer->addObject(instructionPanel);
 
 	/* Volume */
 	auto volumeImage = std::dynamic_pointer_cast<Components::Textures::Texture3D>(System::SharedData::TextureList["Volume"]);
 	auto volume = std::make_shared<Entities::Model>("Volume");
 	volume->transform.SetRotation(1.57, glm::vec3(1.0, 0.0, 0.0));
 	volume->setMesh(System::SharedData::MeshList["ViewAlignedSlices"]);
-	auto volumeMaterial = std::make_shared<Components::Materials::VolumeMaterials::ProxyGeoVolume>(surfaceKey, volumeImage, glm::vec3(1.0, 1., -0.7));
-	auto volumeWireframe = std::make_shared<Components::Materials::SurfaceMaterials::UniformColor>(wireframeKey);
+	auto volumeMaterial = std::make_shared<Components::Materials::VolumeMaterials::ProxyGeoVolume>("DTI", surfaceKey, volumeImage, glm::vec3(1.0, 1., -0.7));
+	auto volumeWireframe = std::make_shared<Components::Materials::SurfaceMaterials::UniformColor>("Wireframe", wireframeKey);
 	volume->addMaterial(volumeMaterial);
 
 	/* Since VBOs are being uploaded, this needs to be called from the render thread */
@@ -140,12 +231,11 @@ void SetupEntites() {
 	streamline->transform.SetScale(glm::vec3(-0.9, 1.12, .9) * 1.5f);
 	streamline->transform.SetRotation(1.57, glm::vec3(1.0, 0.0, 0.0));
 
-	auto cubeMaterial = std::make_shared<Components::Materials::SurfaceMaterials::VertexColor>(wireframeKey);
-	streamline->addMaterial(cubeMaterial);
+	streamline->addMaterial(std::make_shared<Components::Materials::SurfaceMaterials::VertexColor>("VertexColor", wireframeKey));
 	streamline->setMesh(System::SharedData::MeshList["tractography"]);
 	tracktography->addObject(streamline);
 	mainScene->addObject(tracktography);
-	mainScene->addObject(volume);
+	//mainScene->addObject(volume);
 }
 
 void Cleanup() {

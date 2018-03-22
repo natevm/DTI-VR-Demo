@@ -117,27 +117,27 @@ void SetupEntites() {
 	tracktography->addObject(streamline);
 	mainScene->addObject(tracktography);
 
-	/* Volume */
-	auto volumeImage = std::dynamic_pointer_cast<Components::Textures::Texture3D>(System::SharedData::TextureList["Volume"]);
-	auto volume = std::make_shared<Entities::Model>("Volume");
-	volume->transform.SetRotation(1.57, glm::vec3(1.0, 0.0, 0.0));
+	///* Volume */
+	//auto volumeImage = std::dynamic_pointer_cast<Components::Textures::Texture3D>(System::SharedData::TextureList["Volume"]);
+	//auto volume = std::make_shared<Entities::Model>("Volume");
+	//volume->transform.SetRotation(1.57, glm::vec3(1.0, 0.0, 0.0));
 
-	volume->setMesh(System::SharedData::MeshList["ViewAlignedSlices"]);
-	auto volumeMaterial = std::make_shared<Components::Materials::VolumeMaterials::ProxyGeoVolume>(surfaceKey, volumeImage, glm::vec3(1.0, 1., -0.7));
-	auto volumeMaterial2 = std::make_shared<Components::Materials::SurfaceMaterials::UniformColor>(wireframeKey);
-	volumeMaterial2->setColor(1.0, 0.0, 0.0, 1.0);
-	volume->addMaterial(volumeMaterial);
-	//volume->addMaterial(volumeMaterial2);
+	//volume->setMesh(System::SharedData::MeshList["ViewAlignedSlices"]);
+	//auto volumeMaterial = std::make_shared<Components::Materials::VolumeMaterials::ProxyGeoVolume>(surfaceKey, volumeImage, glm::vec3(1.0, 1., -0.7));
+	//auto volumeMaterial2 = std::make_shared<Components::Materials::SurfaceMaterials::UniformColor>(wireframeKey);
+	//volumeMaterial2->setColor(1.0, 0.0, 0.0, 1.0);
+	//volume->addMaterial(volumeMaterial);
+	////volume->addMaterial(volumeMaterial2);
 
-	/* Since VBOs are being uploaded, this needs to be called from the render thread */
-	volume->prerenderCallback = [](std::shared_ptr<Entities::Entity> self) {
-		if (!glfwGetKey(GLDK::DefaultWindow, GLFW_KEY_RIGHT_CONTROL) && !glfwGetKey(GLDK::DefaultWindow, GLFW_KEY_LEFT_CONTROL)) {
-			auto viewAlignedSlices = std::dynamic_pointer_cast<Components::Meshes::ViewAlignedSlices>(System::SharedData::MeshList["ViewAlignedSlices"]);
-			auto camera = System::SharedData::Scenes["MainScene"]->children["Camera"];
-			viewAlignedSlices->update_axis_aligned(self->transform, camera);
-		}
-	};
-	mainScene->addObject(volume);
+	///* Since VBOs are being uploaded, this needs to be called from the render thread */
+	//volume->prerenderCallback = [](std::shared_ptr<Entities::Entity> self) {
+	//	if (!glfwGetKey(GLDK::DefaultWindow, GLFW_KEY_RIGHT_CONTROL) && !glfwGetKey(GLDK::DefaultWindow, GLFW_KEY_LEFT_CONTROL)) {
+	//		auto viewAlignedSlices = std::dynamic_pointer_cast<Components::Meshes::ViewAlignedSlices>(System::SharedData::MeshList["ViewAlignedSlices"]);
+	//		auto camera = System::SharedData::Scenes["MainScene"]->children["Camera"];
+	//		viewAlignedSlices->update_axis_aligned(self->transform, camera);
+	//	}
+	//};
+	//mainScene->addObject(volume);
 }
 
 void Cleanup() {

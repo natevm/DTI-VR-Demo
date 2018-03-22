@@ -23,7 +23,7 @@ namespace Components::Materials::SurfaceMaterials {
 		}
 
 		/* Note: one material instance per entity! Cleanup before destroying GLDK stuff */
-		VertexColor(PipelineKey pipelineKey) {
+		VertexColor(std::string name, PipelineKey pipelineKey) : Material(name) {
 			this->pipelineKey = pipelineKey;
 			
 			/* Allocate and initialize uniform buffer */
@@ -47,6 +47,8 @@ namespace Components::Materials::SurfaceMaterials {
 		}
 
 		void render(int renderpass, GLuint cameraUBO, std::shared_ptr<Components::Meshes::Mesh> mesh) {
+			if (!active) return;
+
 			if (!initialized) {
 				std::cout << "VertexColor: material not initialized, not rendering!" << std::endl;
 				return;

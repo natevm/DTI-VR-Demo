@@ -265,21 +265,34 @@ namespace Entities::Cameras {
 		//}
 
 
-		vr::TrackedDeviceIndex_t rightControllerIndex = m_pHMD->GetTrackedDeviceIndexForControllerRole(vr::TrackedControllerRole_RightHand);
 		/* Right controller */
+		vr::TrackedDeviceIndex_t rightControllerIndex = m_pHMD->GetTrackedDeviceIndexForControllerRole(vr::TrackedControllerRole_RightHand);
 		if (rightControllerIndex != vr::k_unTrackedDeviceIndexInvalid && m_rTrackedDevicePose[rightControllerIndex].bPoseIsValid) {
-			vr::VRControllerState_t state;
-			if (m_pHMD->GetControllerState(rightControllerIndex, &state, sizeof(state))) {
-				if (state.ulButtonPressed != 0) {
+			if (m_pHMD->GetControllerState(rightControllerIndex, &rightControllerState, sizeof(rightControllerState))) {
+				/*if (rightControllerState.ulButtonPressed != 0) {
 					System::Input::RightTrigger = 1;
 				}
 				else {
 					System::Input::RightTrigger = 0;
-				}
+				}*/
 			}
 		}
 
+		/* Left controller */
+		vr::TrackedDeviceIndex_t leftControllerIndex = m_pHMD->GetTrackedDeviceIndexForControllerRole(vr::TrackedControllerRole_LeftHand);
+		if (leftControllerIndex != vr::k_unTrackedDeviceIndexInvalid && m_rTrackedDevicePose[leftControllerIndex].bPoseIsValid) {
+			if (m_pHMD->GetControllerState(leftControllerIndex, &leftControllerState, sizeof(leftControllerState))) {
+				/*if (rightControllerState.ulButtonPressed != 0) {
+				System::Input::RightTrigger = 1;
+				}
+				else {
+				System::Input::RightTrigger = 0;
+				}*/
+			}
+		}
 
+		/* Now call the callback */
+		updateCallback(shared_from_this());
 	}
 
 	void HTCVive::renderScene(std::shared_ptr<Entities::Entity> scene, int renderpass, glm::vec4 clearColor, GLfloat clearDepth, GLint clearStencil) {
@@ -419,15 +432,20 @@ namespace Entities::Cameras {
 		/* Left controller */
 		if (leftControllerIndex != vr::k_unTrackedDeviceIndexInvalid && m_rTrackedDevicePose[leftControllerIndex].bPoseIsValid) {
 			m_mat4LCPose = m_rmat4DevicePose[leftControllerIndex];
-			leftController->transform.localToParentMatrix = m_mat4LCPose;
-			leftController->transform.parentToLocalMatrix = glm::inverse(m_mat4LCPose);
+			//leftController->transform.localToParentMatrix = m_mat4LCPose;
+			//leftController->transform.parentToLocalMatrix = glm::inverse(m_mat4LCPose);
+
+			leftController->transform.SetTransform(m_mat4LCPose);
 		}
 
 		/* Right controller */
 		if (rightControllerIndex != vr::k_unTrackedDeviceIndexInvalid && m_rTrackedDevicePose[rightControllerIndex].bPoseIsValid) {
 			m_mat4RCPose = m_rmat4DevicePose[rightControllerIndex];
-			rightController->transform.localToParentMatrix = m_mat4RCPose;
-			rightController->transform.parentToLocalMatrix = glm::inverse(m_mat4RCPose);
+			//rightController->transform.localToParentMatrix = m_mat4RCPose;
+			//rightController->transform.parentToLocalMatrix = glm::inverse(m_mat4RCPose);
+
+			rightController->transform.SetTransform(m_mat4RCPose);
+
 		}
 	}
 }

@@ -24,7 +24,7 @@ namespace Components::Materials::VolumeMaterials {
 		}
 
 		/* Note: one material instance per entity! Cleanup before destroying GLDK stuff */
-		ProxyGeoVolume(PipelineKey pipelineKey, std::shared_ptr<Components::Textures::Texture> volumeTexture, glm::vec3 size = glm::vec3(1.0), glm::vec3 offset = glm::vec3(0.0)) {
+		ProxyGeoVolume(std::string name, PipelineKey pipelineKey, std::shared_ptr<Components::Textures::Texture> volumeTexture, glm::vec3 size = glm::vec3(1.0), glm::vec3 offset = glm::vec3(0.0)) : Material(name) {
 			this->size = size;
 			this->offset = offset;
 			this->pipelineKey = pipelineKey;
@@ -51,6 +51,8 @@ namespace Components::Materials::VolumeMaterials {
 		}
 
 		void render(int renderpass, GLuint cameraUBO, std::shared_ptr<Components::Meshes::Mesh> mesh) {
+			if (!active) return;
+
 			if (!initialized) {
 				std::cout << "ProxyGeoVolume: material not initialized, not rendering!" << std::endl;
 				return;

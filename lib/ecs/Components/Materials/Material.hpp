@@ -74,6 +74,11 @@ namespace Components::Materials {
 	/* A material defines a render interface, and cannot be instantiated directly. */
 	class Material {
 	public:
+		std::string name;
+		bool active = true;
+		Material(std::string name) {
+			this->name = name;
+		}
 		virtual void render(int renderpass, GLuint cameraUBO, std::shared_ptr<Components::Meshes::Mesh> mesh) = 0;
 		virtual void uploadUniforms(glm::mat4 model) = 0;
 		virtual void cleanup() = 0;

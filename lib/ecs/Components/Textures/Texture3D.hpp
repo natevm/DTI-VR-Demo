@@ -13,7 +13,7 @@ namespace Components::Textures {
 		Texture3D(std::string imagePath) {
 			struct stat st;
 			if (stat(imagePath.c_str(), &st) != 0) {
-				std::cout<<"Texture3D Error: " + imagePath + " does not exist!";
+				std::cout<<"Texture3D Error: " + imagePath + " does not exist!"; //(TODO: add placeholder volume)
 				imagePath = ResourcePath "Defaults/missing-texture.ktx";
 				return;
 			}

@@ -33,8 +33,10 @@ namespace std
 namespace Components::Meshes {
 	void OBJMesh::loadFromOBJ(std::string objPath) {
 		struct stat st;
-		if (stat(objPath.c_str(), &st) != 0)
-			throw std::runtime_error(objPath + " does not exist!");
+		if (stat(objPath.c_str(), &st) != 0) {
+			std::cout << objPath + " does not exist!" << std::endl;
+			objPath = ResourcePath "Defaults/missing-model.obj";
+		}
 
 		std::vector<tinyobj::shape_t> shapes;
 		std::vector<tinyobj::material_t> materials;

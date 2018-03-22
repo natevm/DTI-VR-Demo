@@ -23,14 +23,15 @@ namespace Components::Materials::SurfaceMaterials {
 		}
 
 		/* Note: one material instance per entity! Cleanup before destroying GLDK stuff */
-		UniformColor(PipelineKey pipelineKey) {
+		UniformColor(std::string name, PipelineKey pipelineKey, glm::vec4 color = glm::vec4(1.0, 0.0, 1.0, 1.0)) : Material(name) {
 			this->pipelineKey = pipelineKey;
+			this->color = color;
 			
 			/* Allocate and initialize uniform buffer */
 			glCreateBuffers(1, &uboHandle);
 			uploadUniforms(glm::mat4(1.0));
 			
-			UniformColors.push_back(*this);
+			//UniformColors.push_back(*this);
 		}
 
 		void cleanup() {
@@ -48,6 +49,8 @@ namespace Components::Materials::SurfaceMaterials {
 		}
 
 		void render(int renderpass, GLuint cameraUBO, std::shared_ptr<Components::Meshes::Mesh> mesh) {
+			if (!active) return;
+
 			if (!initialized) {
 				std::cout << "UniformColor: material not initialized, not rendering!" << std::endl;
 				return;
@@ -147,7 +150,7 @@ namespace Components::Materials::SurfaceMaterials {
 		}
 
 		/* Instanced material properties */
-		glm::vec4 color = glm::vec4(1.0, 0.0, 1.0, 1.0);
+		glm::vec4 color;
 		float pointSize = 4.0;
 		GLuint uboHandle;
 		PipelineKey pipelineKey;

@@ -73,6 +73,8 @@ namespace Entities::Cameras {
 		std::shared_ptr<Entities::Model> rightController;
 		bool leftControllerAttached = false;
 		bool rightControllerAttached = false;
+		vr::VRControllerState_t leftControllerState;
+		vr::VRControllerState_t rightControllerState;
 
 	public:
 		HTCVive(std::string name, std::shared_ptr<Entity> scene);

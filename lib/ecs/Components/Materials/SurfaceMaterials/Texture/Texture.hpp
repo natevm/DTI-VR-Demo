@@ -24,14 +24,14 @@ namespace Components::Materials::SurfaceMaterials {
 		}
 
 		/* Note: one material instance per entity! Cleanup before destroying GLDK stuff */
-		Texture(PipelineKey pipelineKey, std::shared_ptr<Components::Textures::Texture> albedo) {
+		Texture(std::string name, PipelineKey pipelineKey, std::shared_ptr<Components::Textures::Texture> albedo) : Material(name) {
 			this->pipelineKey = pipelineKey;
 			this->albedo = albedo;
 			
 			/* Allocate and initialize uniform buffer */
 			glCreateBuffers(1, &uboHandle);
 			uploadUniforms(glm::mat4(1.0));
-			Textures.push_back(*this);
+			//Textures.push_back(*this);
 		}
 
 		void cleanup() {
@@ -48,6 +48,8 @@ namespace Components::Materials::SurfaceMaterials {
 		}
 
 		void render(int renderpass, GLuint cameraUBO, std::shared_ptr<Components::Meshes::Mesh> mesh) {
+			if (!active) return;
+
 			if (!initialized) {
 				std::cout << "Texture: material not initialized, not rendering!" << std::endl;
 				return;

@@ -36,9 +36,10 @@ namespace Components::Meshes {
 
 		int indexOffset = 0;
 		for (int fileIdx = 0; fileIdx < objPaths.size(); ++fileIdx) {
-			std::cout << fileIdx << std::endl;
-			if (stat(objPaths[fileIdx].c_str(), &st) != 0)
-				throw std::runtime_error(objPaths[fileIdx] + " does not exist!");
+			if (stat(objPaths[fileIdx].c_str(), &st) != 0){
+				std::cout << objPaths[fileIdx] + " does not exist!" << std::endl;
+				objPaths[fileIdx] = ResourcePath "Defaults/missing-model.obj";
+			}
 
 			std::vector<tinyobj::shape_t> shapes;
 			std::vector<tinyobj::material_t> materials;

@@ -148,13 +148,17 @@ namespace Entities {
 			children.erase(object->name);
 		}
 
-		glm::mat4 getViewMatrix() {
+		glm::mat4 getWorldToLocalMatrix() {
 			glm::mat4 parentMatrix = glm::mat4(1.0);
 			if (parent != nullptr) {
-				parentMatrix = parent->getViewMatrix();
+				parentMatrix = parent->getWorldToLocalMatrix();
 				return transform.ParentToLocalMatrix() * parentMatrix;
 			}
 			else return transform.ParentToLocalMatrix();
+		}
+
+		glm::mat4 getLocalToWorldMatrix() {
+			return glm::inverse(getWorldToLocalMatrix());
 		}
 	};
 }

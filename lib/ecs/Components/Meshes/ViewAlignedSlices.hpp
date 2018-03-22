@@ -64,9 +64,11 @@ namespace Components::Meshes {
 		}
 
 		int lastAxisUpdated = -1;
-		void update_axis_aligned(Components::Math::Transform &transform, std::shared_ptr<Entities::Entity> camera) {
+		void update_axis_aligned(std::shared_ptr<Entities::Entity> entity, std::shared_ptr<Entities::Entity> camera) {
 			using namespace glm;
-			vec3 camfrwd = glm::normalize(glm::vec3(transform.ParentToLocalMatrix() * vec4(camera->transform.forward.load(), 0.0)));
+
+
+			vec3 camfrwd = glm::normalize(glm::vec3(entity->getWorldToLocalMatrix() * vec4(camera->transform.forward.load(), 0.0)));
 
 			glm::vec3 toVolume = camfrwd;// glm::normalize(transform.GetPosition() - pos);
 			float absX = glm::abs(toVolume.x);

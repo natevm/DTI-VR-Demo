@@ -111,8 +111,8 @@ void SetupEntites() {
 	streamline->transform.SetScale(glm::vec3(-0.9, 1.12, .9) * 1.5f);
 	streamline->transform.SetRotation(1.57, glm::vec3(1.0, 0.0, 0.0));
 
-	auto cubeMaterial = std::make_shared<Components::Materials::SurfaceMaterials::VertexColor>(wireframeKey);
-	streamline->addMaterial(cubeMaterial);
+	auto tractographyMaterial = std::make_shared<Components::Materials::SurfaceMaterials::VertexColor>("VertexColor", wireframeKey);
+	streamline->addMaterial(tractographyMaterial);
 	streamline->setMesh(System::SharedData::MeshList["tractography"]);
 	tracktography->addObject(streamline);
 	mainScene->addObject(tracktography);

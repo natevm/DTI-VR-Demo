@@ -29,5 +29,5 @@ void main() {
 	// vec3 pad = (inTexCoord / ubo.size) - inTexCoord;
 
 	float value = texture(volumeTexture, vec3(texCoord.x, texCoord.y, texCoord.z)).r;
-	outColor = vec4(value, value, value, value) * 2.0;
+	outColor = vec4(value, value, value, value * .8);
 }

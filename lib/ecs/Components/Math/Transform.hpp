@@ -30,12 +30,12 @@ namespace Components::Math {
 	public:
 		// Properties
 		bool hasChanged = false;
-		
-		atomic<vec3> scale = vec3();
-		atomic<vec3> position = vec3();
+
+		atomic<vec3> scale = vec3(1.0);
+		atomic<vec3> position = vec3(0.0);
 		atomic<quat> rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 		//vec3 eulerAngles = vec3();
-		
+
 		/* TODO: Make these constants */
 		vec3 worldRight = vec3(1.0, 0.0, 0.0);
 		vec3 worldUp = vec3(0.0, 1.0, 0.0);
@@ -44,7 +44,7 @@ namespace Components::Math {
 		atomic<vec3> right = vec3(1.0, 0.0, 0.0);
 		atomic<vec3> up = vec3(0.0, 1.0, 0.0);
 		atomic<vec3> forward = vec3(0.0, 0.0, 1.0);
-		
+
 		atomic<mat4> localToParentTransform = mat4(1);
 		atomic<mat4> localToParentRotation = mat4(1);
 		atomic<mat4> localToParentPosition = mat4(1);
@@ -58,7 +58,7 @@ namespace Components::Math {
 		atomic<mat4> localToParentMatrix = mat4(1);
 		atomic<mat4> parentToLocalMatrix = mat4(1);
 
-		
+
 		/*
 			Transform constructor
 		*/
@@ -67,42 +67,52 @@ namespace Components::Math {
 		}
 
 		Transform(const Transform &other) {
-			this->localToParentRotation = other.localToParentRotation.load();
-			this->localToParentPosition = other.localToParentPosition.load();
-			this->localToParentScale = other.localToParentScale.load();
-
-			this->parentToLocalRotation = other.parentToLocalRotation.load();
-			this->parentToLocalPosition = other.parentToLocalPosition.load();
-			this->parentToLocalScale = other.parentToLocalScale.load();
-
-			this->localToParentMatrix = other.localToParentMatrix.load();
-			this->parentToLocalMatrix = other.parentToLocalMatrix.load();
-			
-			this->hasChanged = other.hasChanged;
-
-			this->scale.store(other.scale);
-			this->position.store(other.position);
-			this->rotation.store(other.rotation);
-			//this->eulerAngles = other.eulerAngles;
-
-			this->forward.store(other.forward);
-			this->right.store(other.right);
-			this->up.store(other.up);
-
+			*this = other;
 		}
 
-		/* 
+		Transform & operator= (const Transform & other)
+		{
+			if (this != &other) // protect against invalid self-assignment
+			{
+				this->localToParentRotation = other.localToParentRotation.load();
+				this->localToParentPosition = other.localToParentPosition.load();
+				this->localToParentScale = other.localToParentScale.load();
+				this->localToParentTransform = other.localToParentTransform.load();
+
+				this->parentToLocalRotation = other.parentToLocalRotation.load();
+				this->parentToLocalPosition = other.parentToLocalPosition.load();
+				this->parentToLocalScale = other.parentToLocalScale.load();
+				this->parentToLocalTransform = other.parentToLocalTransform.load();
+
+				this->localToParentMatrix = other.localToParentMatrix.load();
+				this->parentToLocalMatrix = other.parentToLocalMatrix.load();
+
+				this->hasChanged = other.hasChanged;
+
+				this->scale.store(other.scale);
+				this->position.store(other.position);
+				this->rotation.store(other.rotation);
+				//this->eulerAngles = other.eulerAngles;
+
+				this->forward.store(other.forward);
+				this->right.store(other.right);
+				this->up.store(other.up);
+			}
+			return *this;
+		}
+
+		/*
 			Transforms direction from local to parent.
-			This operation is not affected by scale or position of the transform. 
+			This operation is not affected by scale or position of the transform.
 			The returned vector has the same length as the input direction.
 		*/
 		vec3 TransformDirection(vec3 direction) {
-			
+
 			return vec3(localToParentRotation.load() * vec4(direction, 0.0));
 		}
 
-		/* 
-			Transforms position from local to parent. Note, affected by scale. 
+		/*
+			Transforms position from local to parent. Note, affected by scale.
 			The oposition conversion, from parent to local, can be done with Transform.InverseTransformPoint
 		*/
 		vec3 TransformPoint(vec3 point) {
@@ -110,7 +120,7 @@ namespace Components::Math {
 		}
 
 		/*
-			Transforms vector from local to parent. 
+			Transforms vector from local to parent.
 			This is not affected by position of the transform, but is affected by scale.
 			The returned vector may have a different length that the input vector.
 		*/
@@ -137,7 +147,7 @@ namespace Components::Math {
 		}
 
 		/*
-			Transforms a vector from parent space to local space. 
+			Transforms a vector from parent space to local space.
 			The opposite of Transform.TransformVector.
 			This operation is affected by scale.
 		*/
@@ -153,11 +163,11 @@ namespace Components::Math {
 
 		/*
 			Applies a rotation of eulerAngles.z degrees around the z axis, eulerAngles.x degrees around the x axis, and eulerAngles.y degrees around the y axis (in that order).
-			If relativeTo is not specified, rotation is relative to local space. 
+			If relativeTo is not specified, rotation is relative to local space.
 		*/
 		void Rotate(vec3 eularAngles, Space = Space::Local);
 
-		/* 
+		/*
 			Rotates the transform about the provided axis, passing through the provided point in parent coordinates by the provided angle in degrees.
 			This modifies both the position and rotation of the transform.
 		*/
@@ -174,9 +184,39 @@ namespace Components::Math {
 			position = newPosition;
 			localToParentPosition = glm::translate(glm::mat4(1.0), position.load());
 			parentToLocalPosition = glm::translate(glm::mat4(1.0), -position.load());
-			
+
 			UpdateMatrix();
 		}
+
+		void RotateAround(vec3 point, glm::quat rot) {
+			glm::vec3 direction = point - GetPosition();
+			glm::vec3 newPosition = GetPosition() + direction;
+			glm::quat newRotation = rot * GetRotation();
+			newPosition = newPosition - direction * glm::inverse(rot);
+
+			rotation.store(newRotation);
+			localToParentRotation = glm::toMat4(rotation.load());
+			parentToLocalRotation = glm::inverse(localToParentRotation.load());
+
+			position = newPosition;
+			localToParentPosition = glm::translate(glm::mat4(1.0), position.load());
+			parentToLocalPosition = glm::translate(glm::mat4(1.0), -position.load());
+
+			UpdateMatrix();
+		}
+
+		//void ScaleAround(vec3 point, vec3 scale) {
+		//	glm::vec3 direction = point - GetPosition();
+		//	glm::vec3 newPosition = GetPosition() + direction;
+		//	glm::quat newScale = glm::scale(glm::mat4(1.0), scale);
+
+		//	mat4 result = glm::translate(-pivot) *
+		//								glm::scale(..) *
+		//								glm::rotate(..) *
+		//								glm::translate(pivot) *
+		//								glm::translate(..);
+
+		//}
 
 		/* Used primarily for non-trivial transformations */
 		void SetTransform(glm::mat4 transformation) {
@@ -230,12 +270,16 @@ namespace Components::Math {
 			parentToLocalPosition = glm::translate(glm::mat4(1.0), -position.load());
 			UpdateMatrix();
 		}
-		
+
 		vec3 GetScale() {
 			return scale.load();
 		}
 		void SetScale(vec3 newScale) {
 			scale.store(newScale);
+			UpdateScale();
+		}
+		void SetScale(float newScale) {
+			scale.store(vec3(newScale, newScale, newScale));
 			UpdateScale();
 		}
 		void AddScale(vec3 additionalScale) {
@@ -248,12 +292,15 @@ namespace Components::Math {
 		void AddScale(float dx, float dy, float dz) {
 			AddScale(glm::vec3(dx, dy, dz));
 		}
+		void AddScale(float ds) {
+			AddScale(glm::vec3(ds, ds, ds));
+		}
 		void UpdateScale() {
 			localToParentScale = glm::scale(glm::mat4(1.0), scale.load());
-			parentToLocalScale = glm::scale(glm::mat4(1.0), glm::vec3(1.0/scale.load().x, 1.0 / scale.load().y, 1.0 / scale.load().z));
+			parentToLocalScale = glm::scale(glm::mat4(1.0), glm::vec3(1.0 / scale.load().x, 1.0 / scale.load().y, 1.0 / scale.load().z));
 			UpdateMatrix();
 		}
-		
+
 		void UpdateMatrix() {
 
 			localToParentMatrix.store(localToParentTransform.load() * localToParentPosition.load() * localToParentRotation.load() * localToParentScale.load());

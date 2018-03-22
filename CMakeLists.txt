@@ -20,7 +20,7 @@ endif(MSVC)
 # │  Definitions                                                     │
 # └──────────────────────────────────────────────────────────────────┘
 
-add_definitions(-DResourcePath="./resources/")
+add_definitions(-DResourcePath="${CMAKE_CURRENT_SOURCE_DIR}/resources/")
 
 # ┌──────────────────────────────────────────────────────────────────┐
 # │  Load libraries                                                  │

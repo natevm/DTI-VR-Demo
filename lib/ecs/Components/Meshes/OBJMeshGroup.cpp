@@ -107,7 +107,9 @@ namespace Components::Meshes {
 
 			if (generateColors && (vertices.size() != 0)) {
 				for (int i = 1; i < vertices.size(); ++i) {
-					vertices[i - 1].color = glm::vec4(glm::normalize(glm::abs(vertices[i].point - vertices[i - 1].point)), 1.0f);
+
+					glm::vec3 gradient = glm::normalize(glm::abs(vertices[i].point - vertices[i - 1].point));
+					vertices[i - 1].color = glm::vec4((gradient), 1.0f);
 				}
 				vertices[vertices.size() - 1].color = vertices[vertices.size() - 2].color;
 			}

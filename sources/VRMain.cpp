@@ -74,7 +74,7 @@ void SetupComponents() {
 	System::SharedData::TextureList["Floor"] = std::make_shared<Components::Textures::Texture2D>(ResourcePath "Floor.ktx");
 
 	/* View aligned slices for volume and image */
-	MeshList["ViewAlignedSlices"] = std::make_shared<Components::Meshes::ViewAlignedSlices>(128);
+	MeshList["ViewAlignedSlices"] = std::make_shared<Components::Meshes::ViewAlignedSlices>(100);
 	TextureList["Volume"] = std::make_shared<Components::Textures::Texture3D>(ResourcePath "dwi_fa_clean.nrrd");
 	//TextureList["Volume"] = std::make_shared<Components::Textures::Texture3D>(ResourcePath "patient1_mri_original/patient1_T2_original.nhdr");
 
@@ -101,11 +101,15 @@ void SetupComponents() {
 
 }
 
+Components::Math::Transform oldRightTransform, newRightTransform;
+Components::Math::Transform oldLeftTransform, newLeftTransform;
+
 glm::vec3 oldRightPos, newRightPos;
 glm::vec3 oldLeftPos, newLeftPos;
 glm::vec3 oldCenterPos, newCenterPos;
+glm::vec3 oldForward, newForward;
 float oldDistance, newDistance;
-
+bool initialized = false;
 void viveCallback(std::shared_ptr<Entities::Entity> entity) {
 	Components::Materials::PipelineKey surfaceKey = { 0, 1 };
 
@@ -113,8 +117,11 @@ void viveCallback(std::shared_ptr<Entities::Entity> entity) {
 	
 	bool rightGripPressed = bool(vive->rightControllerState.ulButtonPressed >> 2 & 1);
 	bool leftGripPressed = bool(vive->leftControllerState.ulButtonPressed >> 2 & 1);
+	bool leftTrackpadPressed = bool(vive->rightControllerState.ulButtonPressed >> 32 & 1);
+	bool rightTrackpadPressed = bool(vive->leftControllerState.ulButtonPressed >> 32 & 1);
 
-	auto viveContainer = System::SharedData::Scenes["MainScene"]->children["ViveContainer"];
+
+	auto dataset = System::SharedData::Scenes["MainScene"]->children["Dataset"];
 		
 	/* Change controller colors */
 	if (leftGripPressed) {
@@ -134,27 +141,51 @@ void viveCallback(std::shared_ptr<Entities::Entity> entity) {
 		vive->rightController->materials["Color"]->active = false;
 	}
 
+	if (rightTrackpadPressed || leftTrackpadPressed) {
+		//System::SharedData::Scenes["MainScene"]->children["Dataset"]->children["Tractography"]->active = false;
+		System::SharedData::Scenes["MainScene"]->children["Dataset"]->children["Volume"]->active = true;
+	}
+	else {
+		//System::SharedData::Scenes["MainScene"]->children["Dataset"]->children["Tractography"]->active = true;
+		System::SharedData::Scenes["MainScene"]->children["Dataset"]->children["Volume"]->active = false;
+	}
 
 	newRightPos = vive->rightController->transform.GetPosition();
 	newLeftPos = vive->leftController->transform.GetPosition();
 	newCenterPos = (newRightPos + newLeftPos) * .5f;
 	newDistance = glm::distance(newRightPos, newLeftPos);
+	newForward = glm::cross(glm::normalize(newRightPos - newLeftPos), glm::vec3(0.0, 1.0, 0.0));
 
-	if (rightGripPressed && !leftGripPressed) {
-		viveContainer->transform.AddPosition(-(newRightPos - oldRightPos));
-	}
-	else if (!rightGripPressed && leftGripPressed) {
-		viveContainer->transform.AddPosition(-(newLeftPos - oldLeftPos));
-	}
-	else if (rightGripPressed && leftGripPressed) {
-		viveContainer->transform.AddPosition(-(newCenterPos - oldCenterPos));
-		//viveContainer->transform.AddScale(-(newDistance - oldDistance), -(newDistance - oldDistance), -(newDistance - oldDistance));
+	newRightTransform = vive->rightController->transform;
+	newLeftTransform = vive->leftController->transform;
+
+	if (initialized) {
+		if (rightGripPressed && !leftGripPressed) {
+			dataset->transform.AddPosition(newRightTransform.GetPosition() - oldRightTransform.GetPosition());
+			auto toWorld = vive->rightController->parent->getLocalToWorldMatrix();
+			glm::vec3 pivot = toWorld * glm::vec4(newRightTransform.GetPosition(), 1.0);
+			dataset->transform.RotateAround(pivot, newRightTransform.GetRotation() * glm::inverse(oldRightTransform.GetRotation()));
+		}
+		else if (!rightGripPressed && leftGripPressed) {
+			dataset->transform.AddPosition(newLeftTransform.GetPosition() - oldLeftTransform.GetPosition());
+			auto toWorld = vive->leftController->parent->getLocalToWorldMatrix();
+			glm::vec3 pivot = toWorld * glm::vec4(newLeftTransform.GetPosition(), 1.0);
+			dataset->transform.RotateAround(pivot, newLeftTransform.GetRotation() * glm::inverse(oldLeftTransform.GetRotation()));
+		}
+		else if (rightGripPressed && leftGripPressed) {
+			dataset->transform.AddScale((newDistance - oldDistance));
+		}
 	}
 
+	initialized = true;
 	oldRightPos = newRightPos;
 	oldLeftPos = newLeftPos;
 	oldCenterPos = newCenterPos;
 	oldDistance = newDistance;
+	oldForward = newForward;
+
+	oldRightTransform = newRightTransform;
+	oldLeftTransform = newLeftTransform;
 }
 
 void SetupEntites() {
@@ -172,8 +203,8 @@ void SetupEntites() {
 
 	/* Camera */
 	auto viveContainer = std::make_shared<Entities::Entity>("ViveContainer");
-	viveContainer->transform.SetPosition(glm::vec3(0.0, -1.75f, 0.0));
-	viveContainer->transform.SetScale(glm::vec3(1.5));
+	//viveContainer->transform.SetPosition(glm::vec3(0.0, -1.75f, 0.0));
+	//viveContainer->transform.SetScale(glm::vec3(1.5));
 
 	auto vive = std::make_shared<Entities::Cameras::HTCVive>("Vive", viveContainer);
 	auto rightTextureMaterial = std::make_shared<Components::Materials::SurfaceMaterials::Texture>("Texture", surfaceKey, System::SharedData::TextureList["Controller"]);
@@ -203,6 +234,8 @@ void SetupEntites() {
 	instructionPanel->transform.SetRotation(3.14 * -3.0/4.0, glm::vec3(0.0, 1.0, 0.0));
 	viveContainer->addObject(instructionPanel);
 
+	auto dataset = std::make_shared<Entities::Entity>("Dataset");
+
 	/* Volume */
 	auto volumeImage = std::dynamic_pointer_cast<Components::Textures::Texture3D>(System::SharedData::TextureList["Volume"]);
 	auto volume = std::make_shared<Entities::Model>("Volume");
@@ -217,14 +250,14 @@ void SetupEntites() {
 		if (!glfwGetKey(GLDK::DefaultWindow, GLFW_KEY_RIGHT_CONTROL) && !glfwGetKey(GLDK::DefaultWindow, GLFW_KEY_LEFT_CONTROL)) {
 			auto viewAlignedSlices = std::dynamic_pointer_cast<Components::Meshes::ViewAlignedSlices>(System::SharedData::MeshList["ViewAlignedSlices"]);
 			auto camera = System::SharedData::Scenes["MainScene"]->children["ViveContainer"]->children["Vive"];
-			Components::Math::Transform transform = self->transform;
-			viewAlignedSlices->update_axis_aligned(transform, camera/*, .5, 3.0, .3*/);
+			//Components::Math::Transform transform = self->transform;
+			viewAlignedSlices->update_axis_aligned(self, camera/*, .5, 3.0, .3*/);
 			//viewAlignedSlices->update(transform, camera/*, .5, 3.0, .3*/);
 		}
 	};
 
 	//* Add some stream lines */
-	auto tracktography = std::make_shared<Entities::Entity>("Tracktography");
+	auto tracktography = std::make_shared<Entities::Entity>("Tractography");
 	auto streamline = std::make_shared<Entities::Model>("tractography");
 
 	streamline->transform.SetPosition(glm::vec3(-0.015, 0.05, 0.10));
@@ -234,8 +267,12 @@ void SetupEntites() {
 	streamline->addMaterial(std::make_shared<Components::Materials::SurfaceMaterials::VertexColor>("VertexColor", wireframeKey));
 	streamline->setMesh(System::SharedData::MeshList["tractography"]);
 	tracktography->addObject(streamline);
-	mainScene->addObject(tracktography);
-	//mainScene->addObject(volume);
+	dataset->addObject(tracktography);
+	dataset->addObject(volume);
+
+	dataset->transform.SetPosition(0.0, 1.3, 0.0);
+	dataset->transform.SetScale(.5);
+	mainScene->addObject(dataset);
 }
 
 void Cleanup() {

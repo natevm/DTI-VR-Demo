@@ -3,6 +3,7 @@
 #include "Components/Textures/Texture2D.hpp"
 #include "Components/Materials/Material.hpp"
 #include "System/Input.hpp"
+#include <glm/gtx/matrix_decompose.hpp>
 
 namespace Entities::Cameras {
 	HTCVive::HTCVive(std::string name, std::shared_ptr<Entity> scene) : Entity(name, true) {
@@ -306,7 +307,7 @@ namespace Entities::Cameras {
 		glEnable(GL_MULTISAMPLE);
 
 		// Left Eye
-		leftPerspective.updateUBO(getViewMatrix());
+		leftPerspective.updateUBO(getWorldToLocalMatrix());
 		glBindFramebuffer(GL_FRAMEBUFFER, leftEyeDesc.m_nRenderFramebufferId);
 		glViewport(0, 0, m_nRenderWidth, m_nRenderHeight);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -324,7 +325,7 @@ namespace Entities::Cameras {
 		glEnable(GL_MULTISAMPLE);
 
 		// Right Eye
-		rightPerspective.updateUBO(getViewMatrix());
+		rightPerspective.updateUBO(getWorldToLocalMatrix());
 		glBindFramebuffer(GL_FRAMEBUFFER, rightEyeDesc.m_nRenderFramebufferId);
 		glViewport(0, 0, m_nRenderWidth, m_nRenderHeight);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -434,8 +435,16 @@ namespace Entities::Cameras {
 			m_mat4LCPose = m_rmat4DevicePose[leftControllerIndex];
 			//leftController->transform.localToParentMatrix = m_mat4LCPose;
 			//leftController->transform.parentToLocalMatrix = glm::inverse(m_mat4LCPose);
+			glm::vec3 scale, translation, skew;
+			glm::vec4 perspective;
+			glm::quat rotation;
+			glm::decompose(m_mat4LCPose, scale, rotation, translation, skew, perspective);
 
-			leftController->transform.SetTransform(m_mat4LCPose);
+			leftController->transform.SetPosition(translation);
+			leftController->transform.SetRotation(rotation);
+			//leftController->transform.SetScale(scale);
+
+			//leftController->transform.SetTransform(m_mat4LCPose);
 		}
 
 		/* Right controller */
@@ -443,8 +452,13 @@ namespace Entities::Cameras {
 			m_mat4RCPose = m_rmat4DevicePose[rightControllerIndex];
 			//rightController->transform.localToParentMatrix = m_mat4RCPose;
 			//rightController->transform.parentToLocalMatrix = glm::inverse(m_mat4RCPose);
+			glm::vec3 scale, translation, skew;
+			glm::vec4 perspective;
+			glm::quat rotation;
+			glm::decompose(m_mat4RCPose, scale, rotation, translation, skew, perspective);
 
-			rightController->transform.SetTransform(m_mat4RCPose);
+			rightController->transform.SetPosition(translation);
+			rightController->transform.SetRotation(rotation);
 
 		}
 	}
